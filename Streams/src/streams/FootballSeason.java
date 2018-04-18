@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.stream.Stream;
+import java.util.stream.IntStream;
 import java.util.stream.Collectors;
 import java.util.function.Predicate;
 
@@ -61,43 +62,30 @@ public class FootballSeason {
 		Map<String, List<FootballMatch>> matchScoreMap = matches.stream().collect(Collectors.groupingBy(FootballMatch::matchScore));
 
 		System.out.println();
-		System.out.println("Home goals scored frequencies: ");
-		for(Map.Entry<Integer, List<FootballMatch>> e: homeScoreMap.entrySet()) {
-			System.out.println(e.getKey() + " goals : " + e.getValue().size() + " matches");
-		}
+		System.out.println("Home goals scored frequencies: ");		
+		homeScoreMap.entrySet().stream().forEachOrdered(e -> System.out.println(e.getKey() + " goals : " + e.getValue().size() + " matches"));
 		
 		System.out.println();
 		System.out.println("Away goals scored frequencies: ");
-		for(Map.Entry<Integer, List<FootballMatch>> e: awayScoreMap.entrySet()) {
-			System.out.println(e.getKey() + " goals : " + e.getValue().size() + " matches");
-		}
+		awayScoreMap.entrySet().stream().forEachOrdered(e -> System.out.println(e.getKey() + " goals : " + e.getValue().size() + " matches"));
 
 		System.out.println();
 		System.out.println("Match score frequencies: ");
-		for(Map.Entry<String, List<FootballMatch>> e: matchScoreMap.entrySet()) {
-			System.out.println(e.getKey() + " match score : " + e.getValue().size() + " matches");
-		}
-		
+		matchScoreMap.entrySet().stream().forEachOrdered(e -> System.out.println("Score " + e.getKey() + " : " + e.getValue().size() + " matches"));		
 
-		//matches.stream().map(FootballMatch::teamResults).flatMap(x -> x.stream()).forEach(t -> System.out.println(t.toString()));
 		List<TeamSeason> lts = 
 		matches.stream()
-			.map(FootballMatch::teamResults).flatMap(x -> x.stream())
+			.map(FootballMatch::teamResults)
+			.flatMap(x -> x.stream())
 			.collect(Collectors.groupingBy(FootballMatch.TeamResult::team))
 			.entrySet().stream()
 			.map(x -> TeamSeason.asTeamSeason(x.getKey(), x.getValue()))
-			.sorted(Comparator.comparing(TeamSeason::points).thenComparing(TeamSeason::goalDifference).reversed())	// Better as a leagueposition comparator ????
 			.collect(Collectors.toList());
 
+		League league = new League("English Premier League", lts);
+
 		System.out.println();
-		System.out.println("League table");
-		System.out.println();
-//		lts.stream().forEach(ts -> System.out.println(ts.toString()));
-//		lts.stream().forEach(System.out::println);
-		
-		System.out.println(League.tableHeading());
-		lts.stream().forEachOrdered(ts -> System.out.println(League.tableRow(ts)));		// NB Can't pass in position
-		
+		league.printTable();
 	}
 	
 	static List<FootballMatch> readResultsFile(String path) {
@@ -281,13 +269,37 @@ class League {
 		return s;
 	}
 	
-	static String tableRow(TeamSeason ts) {
-		int pos = 0;
+	static String tableRow(TeamSeasonPosition tsp) {
+		int pos = tsp.m_position;
+		TeamSeason ts = tsp.m_teamSeason;
 		Formatter fmt = new Formatter();
 		fmt.format("%3d %-20.20s %10d %10d %10d", pos, ts.team(), ts.played(), ts.goalDifference(), ts.points());
 		String s = fmt.toString();
 		fmt.close();
 		return s;
 	}
-}
 
+	static class TeamSeasonPosition {
+		TeamSeason m_teamSeason;
+		int m_position;
+		
+		TeamSeasonPosition(TeamSeason ts, int position) {
+			m_teamSeason = ts;
+			m_position = position;
+		}
+	}
+	
+	String m_name;
+	List<TeamSeasonPosition> m_leaguePositions;
+	static Comparator<TeamSeason> s_leagueOrdering = Comparator.comparing(TeamSeason::points).thenComparing(TeamSeason::goalDifference).reversed();
+	
+	League(String name, List<TeamSeason> ts) {
+		List<TeamSeason> lSorted = ts.stream().sorted(s_leagueOrdering).collect(Collectors.toList());		
+		m_leaguePositions = IntStream.rangeClosed(1, lSorted.size()).mapToObj(pos -> new TeamSeasonPosition(lSorted.get(pos-1), pos)).collect(Collectors.toList());
+	}
+
+	void printTable() {
+		System.out.println(League.tableHeading());
+		m_leaguePositions.stream().forEachOrdered(lp -> System.out.println(League.tableRow(lp)));		
+	}
+}
