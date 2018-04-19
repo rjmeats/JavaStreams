@@ -1,0 +1,8 @@
+Manual cleaning performed:
+
+- removed topline saying just RESULTS
+- for the Party column simplfied/corrected variations on the same party name
+- for the Party identifier column also rationalised some variations on the same identifier:
+- fixed a Welsh Lib Dems assigned to Plaid in Vale of Clywd and vice versa
+- adjust some wayward capitalisation
+- fix some typos

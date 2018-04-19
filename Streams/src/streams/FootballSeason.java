@@ -206,7 +206,7 @@ class FootballMatch {
 			fm.m_fullTimeHomeScore = Integer.parseInt(fields[4]);
 			fm.m_fullTimeAwayScore = Integer.parseInt(fields[5]);
 		} catch(Exception e) {
-			System.err.println("Error parsing data line - invalid score" + line);
+			System.err.println("Error parsing data line - invalid score " + line);
 			return null;
 		}
 		
