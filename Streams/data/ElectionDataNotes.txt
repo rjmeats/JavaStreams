@@ -6,3 +6,8 @@ Manual cleaning performed:
 - fixed a Welsh Lib Dems assigned to Plaid in Vale of Clywd and vice versa
 - adjust some wayward capitalisation
 - fix some typos
+- remove 'known as' appended to a few names
+- replace smart quote ’ with '
+- replace double quotes with single quotes in party names
+- remove trailing digit from a couple of Welsh constituency names
+- replace a few party identifier abbreviations with full name where the abbreviation is not well known and 10+ candidates

@@ -20,15 +20,26 @@ public class GeneralElection {
 		
 		System.out.println("Read in " + results.size() + " candidate results");
 		
-		//results.stream().map(CandidateResult::constituency).distinct().forEachOrdered(System.out::println);
+		long constituencies = results.stream().map(CandidateResult::constituency).distinct().count();
+		long parties = results.stream().map(CandidateResult::partyIdentifier).distinct().count();
+		long candidateSurnames = results.stream().map(CandidateResult::surname).distinct().count();
+		long candidateFirstNames = results.stream().map(CandidateResult::firstName).distinct().count();
+		long candidateNames = results.stream().map(cr -> cr.firstName() + " " + cr.surname()).distinct().count();
 		
 		System.out.println();
+		System.out.println("Constituencies:        " + constituencies);
+		System.out.println("Parties:               " + parties);
+		System.out.println("Distinct surnames:     " + candidateSurnames);
+		System.out.println("Distinct first names:  " + candidateFirstNames);
+		System.out.println("Distinct names:        " + candidateNames);
 		
-		results.stream().map(CandidateResult::partyIdentifier).distinct().sorted().forEachOrdered(System.out::println);
 		int totalVotes = results.stream().collect(Collectors.summingInt(CandidateResult::votes));
-		
+
+		System.out.println();
 		System.out.println("Total votes : " + totalVotes);
-		
+
+		System.out.println();
+		results.stream().map(CandidateResult::partyIdentifier).distinct().sorted().forEachOrdered(System.out::println);
 	}
 
 	static List<CandidateResult> readResultsFile(String path) {
@@ -122,7 +133,7 @@ class CandidateResult {
 	
 	String constituency() { return m_constituency; }
 	String surname() { return m_surname; }
-	String firstname() { return m_firstname; }
+	String firstName() { return m_firstname; }
 	String party() { return m_party; }
 	String partyIdentifier() { return m_partyIdentifier; }
 	int votes() { return m_votes; }
