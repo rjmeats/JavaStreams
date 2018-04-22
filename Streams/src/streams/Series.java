@@ -14,7 +14,7 @@ public class Series {
 
 		System.out.println();
 		
-		FibonacciSeries2.FibonacciNumber seed2 = new FibonacciSeries2.FibonacciNumber(0, 1, 0);
+		FibonacciSeries2.FibonacciNumber seed2 = new FibonacciSeries2.FibonacciNumber(1, 1, 0);
 		Stream<FibonacciSeries2.FibonacciNumber> s2 = Stream.iterate(seed2, new FibonacciSeries2()); 		
 		s2.limit(howMany).forEachOrdered(System.out::println);
 	}
@@ -68,10 +68,11 @@ class FibonacciSeries2 implements UnaryOperator<FibonacciSeries2.FibonacciNumber
 
 	public FibonacciNumber apply(FibonacciNumber seed) {
 		m_count++;
+		int index = seed.m_index+1;
 		int latest = (seed.m_value == 0) ? 1 : m_previous + seed.m_value;		
 		m_previous = seed.m_value;
 //		System.out.println("In apply : count=" + m_count + ", seed=" + seed + ", return= " + latest);		
-		return new FibonacciNumber(m_count, latest, m_previous);
+		return new FibonacciNumber(index, latest, m_previous);
 	}
 }
 
