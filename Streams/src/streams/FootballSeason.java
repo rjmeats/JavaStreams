@@ -86,6 +86,9 @@ public class FootballSeason {
 
 		System.out.println();
 		league.printTable();
+		
+		// Exercise some other Stream functions using the league data
+		Exerciser.exerciseStreamGeneration(league);
 	}
 	
 	static List<FootballMatch> readResultsFile(String path) {
@@ -301,5 +304,55 @@ class League {
 	void printTable() {
 		System.out.println(League.tableHeading());
 		m_leaguePositions.stream().forEachOrdered(lp -> System.out.println(League.tableRow(lp)));		
+	}
+}
+
+// Try out various other stream interface methods
+class Exerciser {
+
+	static void exerciseStreamGeneration(League league) {
+
+		List<League.TeamSeasonPosition> positions = league.m_leaguePositions;
+		if(positions.size() < 10) {
+			System.out.println("Not enough league positions");
+			return;
+		}
+
+		System.out.println();
+		System.out.println(".............................................................................");
+		System.out.println();
+		System.out.println("Stream generation examples");
+		
+		// Creating/populating streams
+		System.out.println();
+		Stream<League.TeamSeasonPosition> emptyStream = Stream.empty();
+		System.out.println("- empty stream count: " + emptyStream.count());
+		
+		System.out.println();
+		Stream<League.TeamSeasonPosition> oneElementStream = Stream.of(positions.get(0));
+		System.out.println("- one element stream count: " + oneElementStream.count());
+		
+		System.out.println();
+		Stream<League.TeamSeasonPosition> variableLengthElementStream = Stream.of(positions.get(0), positions.get(3), positions.get(8));
+		System.out.println("- variable length element stream count: " + variableLengthElementStream.count());
+		variableLengthElementStream = Stream.of(positions.get(0), positions.get(3), positions.get(8));
+		variableLengthElementStream.forEachOrdered(ts -> System.out.println("  - " + ts.m_teamSeason.m_team + " in position " + ts.m_position));
+		
+		System.out.println();
+		Stream<League.TeamSeasonPosition> concatInputStream1 = Stream.of(positions.get(0), positions.get(2));
+		Stream<League.TeamSeasonPosition> concatInputStream2 = Stream.of(positions.get(0), positions.get(4));
+		Stream<League.TeamSeasonPosition> concatOutputStream = Stream.concat(concatInputStream1, concatInputStream2);
+		System.out.println("- concat stream count: " + concatOutputStream.count());
+		// NB Input streams are consumed doing concat operation, so can't use them afterwards
+		concatInputStream1 = Stream.of(positions.get(0), positions.get(2));
+		concatInputStream2 = Stream.of(positions.get(0), positions.get(4));
+		concatOutputStream = Stream.concat(concatInputStream1, concatInputStream2);
+		concatOutputStream.forEachOrdered(ts -> System.out.println("  - " + ts.m_teamSeason.m_team + " in position " + ts.m_position));
+		
+		System.out.println();
+		Stream.Builder<League.TeamSeasonPosition> builder = Stream.builder();
+		builder.add(positions.get(0)).add(positions.get(5)).add(positions.get(6));
+		Stream<League.TeamSeasonPosition> builtStream = builder.build(); 
+		System.out.println("- built stream count: " + builtStream.count());
 	}
 }
