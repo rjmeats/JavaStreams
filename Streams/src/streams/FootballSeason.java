@@ -15,6 +15,7 @@ import java.util.function.Predicate;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Comparator;
@@ -86,6 +87,14 @@ public class FootballSeason {
 
 		System.out.println();
 		league.printTable();
+
+		System.out.println();
+		System.out.println("Top of table:");
+		league.printTopTable(5);
+
+		System.out.println();
+		System.out.println("Bottom of table:");
+		league.printBottomTable(5);
 		
 		// Exercise some other Stream functions using the league data
 		Exerciser.exerciseStreamGeneration(league);
@@ -282,13 +291,24 @@ class League {
 		return s;
 	}
 
-	static class TeamSeasonPosition {
+	static class TeamSeasonPosition implements Comparable {
 		TeamSeason m_teamSeason;
 		int m_position;
 		
 		TeamSeasonPosition(TeamSeason ts, int position) {
 			m_teamSeason = ts;
 			m_position = position;
+		}
+		
+		int position() { return m_position; }
+		
+		public String toString() {
+			return "Position = " + position() + " : " + m_teamSeason.toString();
+		}
+		
+		public int compareTo(Object o2) {
+			TeamSeasonPosition tsp2 = (TeamSeasonPosition) o2; 
+			return this.position() - tsp2.position();
 		}
 	}
 	
@@ -305,9 +325,19 @@ class League {
 		System.out.println(League.tableHeading());
 		m_leaguePositions.stream().forEachOrdered(lp -> System.out.println(League.tableRow(lp)));		
 	}
+
+	void printTopTable(int length) {
+		System.out.println(League.tableHeading());
+		m_leaguePositions.stream().limit(length).forEachOrdered(lp -> System.out.println(League.tableRow(lp)));		
+	}
+
+	void printBottomTable(int length) {
+		System.out.println(League.tableHeading());
+		m_leaguePositions.stream().skip(m_leaguePositions.size() - length).forEachOrdered(lp -> System.out.println(League.tableRow(lp)));		
+	}
 }
 
-// Try out various other stream interface methods
+// Try out various other stream interface methods, using the league data for example content
 class Exerciser {
 
 	static void exerciseStreamGeneration(League league) {
@@ -323,36 +353,72 @@ class Exerciser {
 		System.out.println();
 		System.out.println("Stream generation examples");
 		
-		// Creating/populating streams
+		// Creating an empty stream with Stream.empty()
 		System.out.println();
 		Stream<League.TeamSeasonPosition> emptyStream = Stream.empty();
 		System.out.println("- empty stream count: " + emptyStream.count());
 		
+		// Creating a stream with a single specific element using Stream.of()
 		System.out.println();
 		Stream<League.TeamSeasonPosition> oneElementStream = Stream.of(positions.get(0));
 		System.out.println("- one element stream count: " + oneElementStream.count());
 		
+		// Creating a stream with a variable number of specific elements using Stream.of(...)
 		System.out.println();
 		Stream<League.TeamSeasonPosition> variableLengthElementStream = Stream.of(positions.get(0), positions.get(3), positions.get(8));
 		System.out.println("- variable length element stream count: " + variableLengthElementStream.count());
+		// NB Stream is consumed doing count operation, so recreate it to do try out forEachOrdered on it
 		variableLengthElementStream = Stream.of(positions.get(0), positions.get(3), positions.get(8));
 		variableLengthElementStream.forEachOrdered(ts -> System.out.println("  - " + ts.m_teamSeason.m_team + " in position " + ts.m_position));
 		
+		// Creating a stream by concatenating two existing streams using Stream.concat()
 		System.out.println();
 		Stream<League.TeamSeasonPosition> concatInputStream1 = Stream.of(positions.get(0), positions.get(2));
 		Stream<League.TeamSeasonPosition> concatInputStream2 = Stream.of(positions.get(0), positions.get(4));
 		Stream<League.TeamSeasonPosition> concatOutputStream = Stream.concat(concatInputStream1, concatInputStream2);
 		System.out.println("- concat stream count: " + concatOutputStream.count());
-		// NB Input streams are consumed doing concat operation, so can't use them afterwards
+		// NB Input streams are consumed doing concat operation, so can't use them again afterwards - regenerate them to try out forEachOrdered
 		concatInputStream1 = Stream.of(positions.get(0), positions.get(2));
 		concatInputStream2 = Stream.of(positions.get(0), positions.get(4));
 		concatOutputStream = Stream.concat(concatInputStream1, concatInputStream2);
 		concatOutputStream.forEachOrdered(ts -> System.out.println("  - " + ts.m_teamSeason.m_team + " in position " + ts.m_position));
 		
+		// Creating a stream by using a Stream.Builder
 		System.out.println();
 		Stream.Builder<League.TeamSeasonPosition> builder = Stream.builder();
 		builder.add(positions.get(0)).add(positions.get(5)).add(positions.get(6));
 		Stream<League.TeamSeasonPosition> builtStream = builder.build(); 
 		System.out.println("- built stream count: " + builtStream.count());
+		
+		// Creating a stream of characters (as ints) from a String 
+		System.out.println();
+		String str = "A CharSequence is a readable sequence of char values";
+		IntStream is = str.chars();
+		System.out.println("- .chars() produced a stream of " + is.count() + " integers from the string [" + str + "]");
+		
+		// Creating a stream from an Array
+		System.out.println();
+		League.TeamSeasonPosition a[] = positions.toArray(new League.TeamSeasonPosition[positions.size()]);
+		Stream<League.TeamSeasonPosition> streamFromArray = Arrays.stream(a);
+		System.out.println("- stream from array count: " + streamFromArray.count());
+		
+		// Peeking at a stream before and after filtering
+		positions.stream()
+				.limit(6)
+				.peek(tsp -> System.out.println("Pre-filter peek:  " + tsp))
+				.filter(tsp -> tsp.position() < 3)
+				.peek(tsp -> System.out.println("Post-filter peek: " + tsp))
+				.count();	// Need a terminal operation for anything to run
+		
+		// NB .sorted() throws a ClassCastException if League.TeamSeasonPosition does not implement comparable
+		System.out.println();
+		positions.stream().sorted().forEachOrdered(System.out::println);
+		
+		// Sort specifying a comparator, e.g. as a lambda directly or stored as a comparator
+		System.out.println();
+		positions.stream().sorted((x,y) -> y.position() - x.position()).forEachOrdered(System.out::println);	// Sorts by position reversed.		
+		System.out.println();
+		Comparator<League.TeamSeasonPosition> reverseOrder = (x,y) -> y.position() - x.position();	// Also sorts by position reversed.
+		positions.stream().sorted(reverseOrder).forEachOrdered(System.out::println);			
 	}
 }
