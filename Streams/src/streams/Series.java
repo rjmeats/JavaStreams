@@ -74,6 +74,7 @@ public class Series {
 		howMany = 10;
 		Stream<Double> randomNumbers = Stream.generate(Math::random);
 		randomNumbers.limit(howMany).forEachOrdered(System.out::println);
+		//	System.out.println("Generated " + randomNumbers.count() + " random numbers");		// NB This never returns - it's an inifinite stream
 	}
 }
 

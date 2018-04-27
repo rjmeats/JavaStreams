@@ -23,14 +23,17 @@ Some examples of using various Java Streams facilities and lambdas / functional 
   * skip()
   * peek()
   * filter()
-  * map()
-  * mapToObj() - an IntStream method
+  * map(), mapToObj() - an IntStream method
   * flatMap()
   * distinct()
   * sorted()
+  * parallel(), sequential()
 * terminal stream operations:
-  * forEachOrdered()
-  * count()
+  * forEachOrdered(), forEach()
+  * count(), min(), max()
+  * sum(), average(), summaryStatistics() - IntStream methods
+  * allMatch(), anyMatch(), noneMatch()
+  * findAll(), findAny()
   * collect()
 * stream [Collectors](https://docs.oracle.com/javase/8/docs/api/java/util/stream/Collectors.html) operations:
   * Collectors.summingInt()

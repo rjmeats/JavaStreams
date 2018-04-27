@@ -6,6 +6,8 @@ package streams;
 // https://docs.oracle.com/javase/8/docs/api/java/util/function/package-summary.html
 
 import java.io.IOException;
+
+
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.stream.Stream;
@@ -20,6 +22,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Comparator;
 import java.util.Formatter;
+import java.util.Optional;
+import java.util.OptionalDouble;
+import java.util.Iterator;
+import java.util.IntSummaryStatistics;
 
 public class FootballSeason {
 
@@ -38,6 +44,9 @@ public class FootballSeason {
 		int totalNumberOfHomeGoals = matches.stream().collect(Collectors.summingInt(FootballMatch::homeScore));
 		int totalNumberOfAwayGoals = matches.stream().collect(Collectors.summingInt(FootballMatch::awayScore));
 
+		String ss = "abc";
+		String ss2 = ss.toLowerCase();
+		
 		System.out.println("- contains " + numberOfHomeTeams + " home teams and " + numberOfAwayTeams + " away teams");
 		System.out.println("- " + totalNumberOfHomeGoals + " home goals and " + totalNumberOfAwayGoals + " away goals");
 		System.out.println("- average score " + Math.round(totalNumberOfHomeGoals*100.0/matches.size())/100.0 + "-" + Math.round(totalNumberOfAwayGoals*100.0/matches.size())/100.0 + "");
@@ -95,7 +104,21 @@ public class FootballSeason {
 		System.out.println();
 		System.out.println("Bottom of table:");
 		league.printBottomTable(5);
+
+		System.out.println();
+		System.out.println("Stats:");
+		OptionalDouble odPoints = league.m_leaguePositions.stream().mapToInt(p -> p.teamSeason().m_points).average();
+		int sumPoints = league.m_leaguePositions.stream().mapToInt(p -> p.teamSeason().m_points).sum();
+		IntSummaryStatistics statsSummary = league.m_leaguePositions.stream().mapToInt(p -> p.teamSeason().m_points).summaryStatistics();
+		System.out.println("- avg points: " + odPoints.orElse(-999.0));
+		System.out.println("- sum points: " + sumPoints);
+		System.out.println("- summary points count: " + statsSummary.getCount());
+		System.out.println("- summary points average: " + statsSummary.getAverage());
+		System.out.println("- summary points sum: " + statsSummary.getSum());
+		System.out.println("- summary points max: " + statsSummary.getMax());
+		System.out.println("- summary points min: " + statsSummary.getMin());
 		
+
 		// Exercise some other Stream functions using the league data
 		Exerciser.exerciseStreamGeneration(league);
 	}
@@ -291,7 +314,7 @@ class League {
 		return s;
 	}
 
-	static class TeamSeasonPosition implements Comparable {
+	static class TeamSeasonPosition implements Comparable<TeamSeasonPosition> {
 		TeamSeason m_teamSeason;
 		int m_position;
 		
@@ -301,13 +324,13 @@ class League {
 		}
 		
 		int position() { return m_position; }
+		TeamSeason teamSeason() { return m_teamSeason; }
 		
 		public String toString() {
 			return "Position = " + position() + " : " + m_teamSeason.toString();
 		}
 		
-		public int compareTo(Object o2) {
-			TeamSeasonPosition tsp2 = (TeamSeasonPosition) o2; 
+		public int compareTo(TeamSeasonPosition tsp2) {
 			return this.position() - tsp2.position();
 		}
 	}
@@ -317,6 +340,7 @@ class League {
 	static Comparator<TeamSeason> s_leagueOrdering = Comparator.comparing(TeamSeason::points).thenComparing(TeamSeason::goalDifference).reversed();
 	
 	League(String name, List<TeamSeason> ts) {
+		// Sort the league, and put in order into a list
 		List<TeamSeason> lSorted = ts.stream().sorted(s_leagueOrdering).collect(Collectors.toList());		
 		m_leaguePositions = IntStream.rangeClosed(1, lSorted.size()).mapToObj(pos -> new TeamSeasonPosition(lSorted.get(pos-1), pos)).collect(Collectors.toList());
 	}
@@ -410,7 +434,7 @@ class Exerciser {
 				.peek(tsp -> System.out.println("Post-filter peek: " + tsp))
 				.count();	// Need a terminal operation for anything to run
 		
-		// NB .sorted() throws a ClassCastException if League.TeamSeasonPosition does not implement comparable
+		// NB .sorted() throws a ClassCastException if League.TeamSeasonPosition does not implement Ccomparable
 		System.out.println();
 		positions.stream().sorted().forEachOrdered(System.out::println);
 		
@@ -419,6 +443,75 @@ class Exerciser {
 		positions.stream().sorted((x,y) -> y.position() - x.position()).forEachOrdered(System.out::println);	// Sorts by position reversed.		
 		System.out.println();
 		Comparator<League.TeamSeasonPosition> reverseOrder = (x,y) -> y.position() - x.position();	// Also sorts by position reversed.
-		positions.stream().sorted(reverseOrder).forEachOrdered(System.out::println);			
+		positions.stream().sorted(reverseOrder).forEachOrdered(System.out::println);
+		
+		// Demonstrate some 'Match' and 'Find' terminal operations
+		System.out.println();
+		printTrueFalse("- allMatch positions < 15", positions.stream().allMatch(p -> p.position() < 15));
+		printTrueFalse("- allMatch positions < 20", positions.stream().allMatch(p -> p.position() < 20));
+		printTrueFalse("- allMatch positions < 21", positions.stream().allMatch(p -> p.position() < 21));
+		printTrueFalse("- anyMatch positions > 18", positions.stream().anyMatch(p -> p.position() > 18));
+		printTrueFalse("- anyMatch positions > 19", positions.stream().anyMatch(p -> p.position() > 19));
+		printTrueFalse("- anyMatch positions > 20", positions.stream().anyMatch(p -> p.position() > 20));
+		printTrueFalse("- noneMatch positions > 18", positions.stream().noneMatch(p -> p.position() > 18));
+		printTrueFalse("- noneMatch positions > 19", positions.stream().noneMatch(p -> p.position() > 19));
+		printTrueFalse("- noneMatch positions > 20", positions.stream().noneMatch(p -> p.position() > 20));
+		printTrueFalse("- empty stream: allMatch positions < 15", positions.stream().limit(0).allMatch(p -> p.position() < 15));
+		printTrueFalse("- empty stream: anyMatch positions < 15", positions.stream().limit(0).anyMatch(p -> p.position() < 15));
+		printTrueFalse("- empty stream: noneMatch positions < 15", positions.stream().limit(0).noneMatch(p -> p.position() < 15));
+		
+		printOptional("- findFirst found", positions.stream().findFirst());
+		printOptional("- findAny found", positions.stream().findAny());
+		printOptional("- empty stream: findFirst found", positions.stream().limit(0).findFirst());
+		printOptional("- empty stream: findAny found", positions.stream().limit(0).findAny());
+		
+		// max and min terminal operations
+		System.out.println();
+		Comparator<League.TeamSeasonPosition> teamNameOrder = (x,y) -> x.teamSeason().m_team.compareTo(y.teamSeason().m_team);	// Also sorts by position reversed.
+		printOptional("- max team name", positions.stream().max(teamNameOrder));
+		printOptional("- min team name", positions.stream().min(teamNameOrder));
+		printOptional("- empty stream : max team name", positions.stream().limit(0).max(teamNameOrder));
+		printOptional("- empty stream : min team name", positions.stream().limit(0).min(teamNameOrder));
+		
+		// Further Terminal operations for numeric streams
+		// Create an array of objects from stream elements
+		System.out.println();
+		Object a1[] = positions.stream().limit(5).toArray();
+		System.out.println("- object array size " + a1.length + ", element 1 = " + a1[1].toString());		
+		// Create an array of typed from stream elements, with generator function allocating the array
+		League.TeamSeasonPosition[] a2 = positions.stream().limit(7).toArray(League.TeamSeasonPosition[]::new);
+		System.out.println("- typed array size " + a2.length + ", points 5 = " + a2[5].teamSeason().m_points);
+
+		// Create an iterator over the stream elements
+		System.out.println();
+		Iterator<League.TeamSeasonPosition> it = positions.stream().limit(4).iterator();
+		while(it.hasNext()) {
+			League.TeamSeasonPosition tsp = it.next();
+			System.out.println("- iter : " + tsp.toString());
+		}
+		
+		// Parallel and sequential
+		System.out.println();
+		Stream<League.TeamSeasonPosition> parseq1 = positions.stream().sequential();
+		Stream<League.TeamSeasonPosition> parseq2 = positions.stream().parallel();
+		printTrueFalse("- sequential stream isParallel ?", parseq1.isParallel());
+		printTrueFalse("- parallel stream isParallel ?", parseq2.isParallel());
+		// forEach is not ordered, so parallel stream produces out of order listing
+		parseq1.forEach(p -> System.out.println(" Seq: " + p.toString()));
+		parseq2.forEach(p -> System.out.println(" Par: " + p.toString()));		
+	}
+	
+	static void printTrueFalse(String s, boolean b) {
+		System.out.println(s + " " + (b ? "true" : "false"));
+	}
+	
+	static void printOptional(String s, Optional<League.TeamSeasonPosition> op) {
+		if(op.isPresent()) {
+			System.out.println(s + " " + op.get().toString());			
+		}
+		else {
+			System.out.println(s + " " + " [no value]");			
+		}
+			
 	}
 }
