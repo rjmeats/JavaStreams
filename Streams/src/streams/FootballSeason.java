@@ -6,8 +6,6 @@ package streams;
 // https://docs.oracle.com/javase/8/docs/api/java/util/function/package-summary.html
 
 import java.io.IOException;
-
-
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.stream.Stream;

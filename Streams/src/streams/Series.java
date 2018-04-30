@@ -5,6 +5,10 @@ import java.util.function.Supplier;
 import java.util.function.IntSupplier;
 import java.util.stream.Stream;
 import java.util.stream.IntStream;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Optional;
+import java.util.Date;
 import java.math.BigDecimal;
 import java.math.BigInteger;		// https://docs.oracle.com/javase/8/docs/api/java/math/BigInteger.html
 import java.math.RoundingMode;
@@ -75,6 +79,13 @@ public class Series {
 		Stream<Double> randomNumbers = Stream.generate(Math::random);
 		randomNumbers.limit(howMany).forEachOrdered(System.out::println);
 		//	System.out.println("Generated " + randomNumbers.count() + " random numbers");		// NB This never returns - it's an inifinite stream
+
+		// Infinite stream of Prime numbers 
+		System.out.println();
+		System.out.println("Primes:");
+		howMany = 1000000;		// Probably takes an hour to reach a million
+		Stream<PrimeSeries.Prime> primes = Stream.generate(new PrimeSeries()); 		
+		primes.limit(howMany).filter(p -> p.m_index % 10000 == 0).forEachOrdered(System.out::println);		
 	}
 }
 
@@ -95,7 +106,6 @@ class FibonacciSeries implements UnaryOperator<Integer> {
 //		System.out.println("In apply : count=" + m_count + ", seed=" + seed + ", return= " + latest);		
 		return latest;
 	}
-	
 }
 
 class FibonacciSeries2 implements UnaryOperator<FibonacciSeries2.FibonacciNumber>  {
@@ -259,5 +269,90 @@ class StringWord implements Supplier<String> {
 		else {
 			return ""; // Not really infinite!
 		}
+	}
+}
+
+class PrimeSeries implements Supplier<PrimeSeries.Prime> {
+
+	List<Integer> m_primesSoFar;
+	int m_reached;
+	int m_count;
+	long m_msStartedAt;
+	int m_previousStopAtIndex;
+
+	static class Prime {
+		int m_index;
+		int m_primeNumber;
+		long m_ms;
+		
+		Prime(int index, int primeNumber, long ms) {
+			m_index = index;
+			m_primeNumber = primeNumber;
+			m_ms = ms;
+		}
+		
+		public String toString() {
+			return m_index + ": " + m_primeNumber + ": took " + m_ms + " ms";
+		}
+	}
+		
+	PrimeSeries() {
+		m_primesSoFar = new ArrayList<Integer>();
+		m_reached = 0;
+		m_count = 0;
+		m_msStartedAt = new Date().getTime();
+		m_previousStopAtIndex = 0;
+	}
+	
+	public Prime get() {
+		int nextPrime = -1;
+		if(m_primesSoFar.size() == 0) {
+			nextPrime = 2;
+		} 
+		if(m_primesSoFar.size() == 1) {
+			nextPrime = 3;
+		}
+		else {
+			int reached = m_reached;
+			int loops = 0;
+			while(nextPrime == -1) {
+				loops++;
+				final int reachedNow = reached+2;	// Can't use reached as lambda requires an effectively final value
+				final int stopAt = (int)Math.sqrt(reachedNow*1.0)+1;
+				// Various optimisations that aren't
+				//int stopAtIndex = IntStream.range(m_previousStopAtIndex, m_primesSoFar.size()).filter(i -> m_primesSoFar.get(i) <= stopAt).max().getAsInt();
+				//m_previousStopAtIndex = stopAtIndex;
+				//if(stopAtIndex+1 < m_primesSoFar.size()) {					
+				//	System.out.println("Reached: " + reachedNow + ", stop at " + stopAt + ", Stop at index = " + stopAtIndex + ", stopping at " + m_primesSoFar.get(stopAtIndex) 
+				//				+ " (" + m_primesSoFar.get(stopAtIndex+1) +")");
+				//}
+				//Optional<Integer> factor = m_primesSoFar.stream().filter(p -> reachedNow % p == 0).filter(p -> reachedNow / p <= reachedNow).findFirst();
+				//Optional<Integer> factor = m_primesSoFar.stream().filter(p -> reachedNow / p <= reachedNow).filter(p -> reachedNow % p == 0).findFirst();
+				//Optional<Integer> factor = m_primesSoFar.stream().filter(p -> reachedNow % p == 0).filter(p -> p <= stopAt).findFirst();
+				//Optional<Integer> factor = m_primesSoFar.stream().filter(p -> p <= stopAt).filter(p -> reachedNow % p == 0).findFirst();
+				//Optional<Integer> factor = m_primesSoFar.stream().limit(stopAtIndex).filter(p -> reachedNow % p == 0).filter(p -> p <= stopAt).findFirst();
+				//Optional<Integer> factor = m_primesSoFar.stream().filter(p -> reachedNow % p == 0).findFirst();
+				
+				// Combining predicates seems to be a lot faster then two separate filters. Stream produces about 650,000 primes in 1000 seconds 
+				Optional<Integer> factor = m_primesSoFar.stream().filter(p -> (p <= stopAt) && (reachedNow % p == 0)).findFirst();
+				// Parallel no faster.
+				//Optional<Integer> factor = m_primesSoFar.stream().parallel().filter(p -> (p <= stopAt) && (reachedNow % p == 0)).findFirst();
+				//Optional<Integer> factor = m_primesSoFar.stream().parallel().filter(p -> (p <= stopAt) && (reachedNow % p == 0)).findAny();
+				if(!factor.isPresent()) {
+					nextPrime = reachedNow;
+					// System.out.println("Found prime: " + reachedNow + " after " + loops + " loops");					
+				}
+				else {
+					// System.out.println("Found factor of " + reachedNow + " : "  + factor.get());					
+					reached = reachedNow;
+				}
+			}	
+		}
+		
+		m_count++;
+		m_reached = nextPrime;
+		m_primesSoFar.add(m_reached);
+		long ms = new Date().getTime() - m_msStartedAt;
+		return new Prime(m_count, nextPrime, ms);
 	}
 }
