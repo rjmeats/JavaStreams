@@ -4,10 +4,22 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.HashMap;
+import java.util.Set;
+import java.util.Map;
+import java.util.Collection;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.Comparator;
+import java.util.function.BinaryOperator;
+import java.util.function.Supplier;
+import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
+import java.util.stream.Collector;
 import java.util.stream.Stream;
+import java.util.IntSummaryStatistics;
 
 public class GeneralElection {
 
@@ -38,8 +50,70 @@ public class GeneralElection {
 		System.out.println();
 		System.out.println("Total votes : " + totalVotes);
 
+		// List all the parties
+		//System.out.println();
+		//results.stream().map(CandidateResult::partyIdentifier).distinct().sorted().forEachOrdered(System.out::println);
+		
+		// Run some other Collections as example usage
+		boolean doCollectorsExercise = false;
+		if(doCollectorsExercise) {
+			CollectorsExercise.exerciseCollectors(results);
+		}
+		
+		// Generate a set of constituencies
+		List<Constituency> lConstituencies = 
+		results.stream()
+			.collect(Collectors.groupingBy(CandidateResult::constituency))
+			.entrySet().stream()
+			.map(x -> Constituency.asConstituency(x.getKey(), x.getValue()))
+			.collect(Collectors.toList());
+
+		System.out.println("Generated " + lConstituencies.size() + " constituencies");
 		System.out.println();
-		results.stream().map(CandidateResult::partyIdentifier).distinct().sorted().forEachOrdered(System.out::println);
+		Map<String, List<Constituency>> partyWinners = lConstituencies.stream().collect(Collectors.groupingBy(Constituency::winningParty));
+		for(Map.Entry<String, List<Constituency>> entry : partyWinners.entrySet()) {
+			System.out.println("  " + entry.getKey() + " : " + entry.getValue().size() + " seats");
+		}
+
+		System.out.println();
+		Map<Country, List<Constituency>> byCountry = lConstituencies.stream().collect(Collectors.groupingBy(Constituency::country));
+		for(Map.Entry<Country, List<Constituency>> entry : byCountry.entrySet()) {
+			System.out.println(entry.getKey() + " : " + entry.getValue().size() + " constituencies");
+			Map<String, List<Constituency>> thisCountryWinners = entry.getValue().stream().collect(Collectors.groupingBy(Constituency::winningParty));
+			for(Map.Entry<String, List<Constituency>> entry2 : thisCountryWinners.entrySet()) {
+				System.out.println("  " + entry2.getKey() + " : " + entry2.getValue().size() + " seats");
+			}
+		}
+		
+		// Constituencies with smallest number of votes for the winner
+		System.out.println();
+		lConstituencies.stream().sorted(Comparator.comparing(Constituency::winningVotes)).limit(10).forEachOrdered(System.out::println);
+
+		// Constituencies with largest number of votes for the winner
+		System.out.println();
+		lConstituencies.stream().sorted(Comparator.comparing(Constituency::winningVotes).reversed()).limit(10).forEachOrdered(System.out::println);
+
+		// Constituencies with the smallest majority
+		System.out.println();
+		lConstituencies.stream().sorted(Comparator.comparing(Constituency::majority)).limit(10).forEachOrdered(System.out::println);
+
+		// Constituencies where the winner has the smallest proportion of the vote
+		System.out.println();
+		lConstituencies.stream().sorted(Comparator.comparing(Constituency::winningShare)).limit(10).forEachOrdered(System.out::println);
+
+		// Constituencies where the last-placed candidate has the largest proportion of the vote
+		System.out.println();
+		lConstituencies.stream().sorted(Comparator.comparing(Constituency::losingShare).reversed()).limit(10)
+				.forEachOrdered(c -> System.out.println(c.toString() + " [ " + Math.round(c.losingShare()) + "% " + c.m_results.get(c.m_results.size()-1) + "]"));
+
+		// Map<String, PartyResult> mParties = lConstituencies.stream().parallel().collect(PartyResult.ResultCollector.getCollector());
+		Map<String, PartyResult> mParties = lConstituencies.stream().collect(PartyResult.ResultCollector.getCollector());
+		System.out.println();
+		List<PartyResult> lParties = mParties.values().stream().sorted((x,y) -> y.m_wins - x.m_wins).collect(Collectors.toList());
+		System.out.println("Produced party result for " + mParties.size() + " parties");
+		System.out.println();
+		System.out.println("Parties with a win or 100000 votes:");
+		lParties.stream().filter(p -> p.m_wins > 0 || p.m_votes >= 100000).forEachOrdered(System.out::println);
 	}
 
 	static List<CandidateResult> readResultsFile(String path) {
@@ -109,11 +183,11 @@ class CandidateResult {
 		
 		CandidateResult cr = new CandidateResult();
 		
-		cr.m_constituency = fields[2];
-		cr.m_surname = fields[3];
-		cr.m_firstname = fields[4];
-		cr.m_party = fields[5];
-		cr.m_partyIdentifier = fields[6];
+		cr.m_constituency = fields[2].trim();
+		cr.m_surname = fields[3].trim();
+		cr.m_firstname = fields[4].trim();
+		cr.m_party = fields[5].trim();
+		cr.m_partyIdentifier = fields[6].trim();
 		try {
 			cr.m_votes = Integer.parseInt(fields[7]);
 		} catch(Exception e) {
@@ -137,4 +211,328 @@ class CandidateResult {
 	String party() { return m_party; }
 	String partyIdentifier() { return m_partyIdentifier; }
 	int votes() { return m_votes; }
+	
+	public String toString() {
+		return constituency() + " / " + firstName() + " " + surname() + " / " + party() + " : " + votes();
+	}
+}
+
+enum Country {
+	ENGLAND, SCOTLAND, WALES, NORTHERN_IRELAND;
+}
+
+class Constituency {
+	
+	static Constituency asConstituency(String constituencyName, List<CandidateResult> lResults) {
+		return new Constituency(constituencyName, lResults);
+	}
+	
+	String m_name;
+	Country m_country;
+	List<CandidateResult> m_results;		// Sorted by votes, highest first
+	int m_totalVotes;
+	String m_winningParty;
+	String m_winningCandidate;
+	int m_winningVotes;
+	int m_majority;
+	double m_winningShare;					// Proportion of votes for the winner
+	double m_losingShare;					// Proportion of votes for last place
+
+	Country country() { return m_country; }
+	String winningParty() { return m_winningParty; }
+	int winningVotes() { return m_winningVotes; }
+	int majority() { return m_majority; }
+	double winningShare() { return m_winningShare; }
+	double losingShare() { return m_losingShare; }
+	
+	Constituency(String constituencyName, List<CandidateResult> lResults) {
+		m_name = constituencyName;
+		m_results = new ArrayList<>(lResults);
+		m_results.sort((x,y) -> y.m_votes - x.m_votes);
+		
+		m_totalVotes = m_results.stream().collect(Collectors.summingInt(CandidateResult::votes));
+		CandidateResult winner = m_results.get(0); 
+		m_winningParty = winner.partyIdentifier();
+		m_winningCandidate = winner.surname() + ", " + winner.firstName();
+		m_winningVotes = winner.votes();
+		m_majority = winner.votes() - ((m_results.size() > 1) ? m_results.get(1).votes() : 0);
+		m_winningShare = winner.votes() * 100.0 / m_totalVotes;	
+		m_losingShare = m_results.get(m_results.size()-1).votes() * 100.0 / m_totalVotes;	
+		
+		assignCountry();
+	}
+	
+	void assignCountry() {
+		m_country = null;
+		// Assign a country based on indicative know party identifiers
+		m_results.stream().map(cr -> cr.m_partyIdentifier).forEachOrdered(pi -> checkCountry(pi));
+	}
+	
+	void checkCountry(String partyIdentifier) {
+		Country c = null;
+		String pi = partyIdentifier.toLowerCase();
+		// Assume nationalist sit in all seats 
+		if(pi.equalsIgnoreCase("snp")) {
+			c = Country.SCOTLAND;
+		}
+		else if(pi.equalsIgnoreCase("plaid cymru")) {
+			c = Country.WALES;
+		}
+		else if(pi.equalsIgnoreCase("dup") || pi.equalsIgnoreCase("sdlp")  || pi.equalsIgnoreCase("uup") || pi.equalsIgnoreCase("sinn féin")) {
+			c = Country.NORTHERN_IRELAND;
+		}
+
+		if(c == null) {
+			if(m_country == null) {
+				m_country = Country.ENGLAND;
+			}
+		}
+		else if(m_country == null) {
+			m_country = c;
+		}
+		else if(m_country == Country.ENGLAND) {
+			// Override default value
+			m_country = c;
+		}
+		else if(m_country == c) {
+			// Already assigned
+		}
+		else {
+			System.err.println("Unexpected country combination in constituency " + m_name);
+		}	
+	}
+	
+	public String toString() {
+		return m_name + " (" + m_country + ") : total votes " + m_totalVotes + ", " + m_results.size() + " candidates : won by " + m_winningParty + " (" + m_winningCandidate + ")" + 
+					" : " + m_winningVotes + " votes, maj " + m_majority + ", share " + Math.round(m_winningShare) + " %"; 
+	}
+}
+
+class PartyResult {
+	
+	String m_name;
+	int m_wins;
+	int m_seconds;
+	int m_thirds;
+	int m_contested;
+	int m_votes;
+	
+	PartyResult(String name) {
+		m_name = name;
+		m_wins = 0;
+		m_seconds = 0;
+		m_thirds = 0;
+		m_contested = 0;
+		m_votes = 0;
+	}
+	
+	void addConstituency(Constituency c, CandidateResult cr, int position) {
+		// System.out.println("Combining consituency " + c);
+		m_contested++;
+		m_votes += cr.m_votes;
+		if(position == 1) m_wins++; 
+		if(position == 2) m_seconds++; 
+		if(position == 3) m_thirds++; 
+	}
+
+	void mergeWith(PartyResult other) {
+		// System.out.println("Merging " + this.toString() + " and " + other.toString());
+		this.m_wins += other.m_wins;
+		this.m_seconds += other.m_seconds;
+		this.m_thirds += other.m_thirds;
+		this.m_contested += other.m_contested;
+		this.m_votes += other.m_votes;
+	}
+	
+	public String toString() {
+		return m_name + " : wins=" + m_wins + ", seconds=" + m_seconds + ", thirds=" + m_thirds + ", contested=" + m_contested + ", votes=" + m_votes + ", votes per win=" + (m_wins==0? m_votes : m_votes/m_wins); 
+	}
+
+	// Our bespoke collector implementation, providing supplier, accumulator and combiner 
+	static class ResultCollector implements
+			Supplier<Map<String, PartyResult>>, 
+			BiConsumer<Map<String, PartyResult>, Constituency>, 
+			BinaryOperator<Map<String, PartyResult>>
+	{		
+		static Collector<Constituency, ?, Map<String, PartyResult>> getCollector() {
+			ResultCollector rc = new ResultCollector();
+			return Collector.of(rc,  rc,  rc, Collector.Characteristics.UNORDERED);
+		}
+
+		ResultCollector() {
+		}
+		
+		public Map<String, PartyResult> get() {
+			return new HashMap<String, PartyResult>();
+		}
+		
+		public void accept(Map<String, PartyResult> m, Constituency c) {
+			int position = 0;
+			for(CandidateResult cr : c.m_results) {
+				position++;
+				PartyResult p = m.get(cr.partyIdentifier());
+				if(p == null) {
+					p = new PartyResult(cr.partyIdentifier());
+					m.put(cr.partyIdentifier(), p);
+				}
+				p.addConstituency(c, cr, position);
+			}
+		}
+		
+		public Map<String, PartyResult> apply(Map<String, PartyResult> m1, Map<String, PartyResult> m2) {
+			// Invoked when doing collect on a parallel stream.
+			// Combine results from the two maps into a single map (can be a new map or one of the passed-in ones)
+			// Update m1 map to include everything in m2 map.
+			for(Map.Entry<String, PartyResult> entry : m1.entrySet()) {
+				PartyResult other = m2.get(entry.getKey());
+				if(other != null) {
+					entry.getValue().mergeWith(other);
+				}
+			}
+			
+			// Add in anything in map m2 with no entry in m1
+			for(Map.Entry<String, PartyResult> entry : m2.entrySet()) {
+				PartyResult other = m1.get(entry.getKey());
+				if(other == null) {
+					m1.put(entry.getKey(), entry.getValue());
+				}
+			}
+			
+			return m1;
+		}
+	}
+}
+
+// ==========================================================
+
+class CollectorsExercise {
+	
+	// Invoke various Collectors to provide example usage
+	static void exerciseCollectors(List<CandidateResult> results) {
+		// Exercise a few specific collectors
+		System.out.println();		
+		System.out.println("====================================================================");
+		System.out.println();
+		// Show the collect(Collectors.counting()) produces the same as .count()
+		long candidateNamesByCollector = results.stream().map(cr -> cr.firstName() + " " + cr.surname()).distinct().collect(Collectors.counting());
+		System.out.println("Distinct names II:     " + candidateNamesByCollector);
+
+		// Generate an average vote using averaging collector
+		double avgVotes = results.stream().collect(Collectors.averagingInt(CandidateResult::votes)); 
+		System.out.println("Average votes:     " + avgVotes);
+
+		// Generate a summarizing structure as an alternative
+		IntSummaryStatistics iss = results.stream().collect(Collectors.summarizingInt(CandidateResult::votes));
+		System.out.println();
+		System.out.println("Summary count: " + iss.getCount());
+		System.out.println("Summary sum:   " + iss.getSum());
+		System.out.println("Summary avg:   " + iss.getAverage());
+		System.out.println("Summary max:   " + iss.getMax());
+		System.out.println("Summary min:   " + iss.getMin());
+
+		// Max and min elements based on a specified comparator		
+		Comparator<CandidateResult> votesComparator = (x,y) -> x.m_votes - y.m_votes;
+		Optional<CandidateResult> maxVotes = results.stream().collect(Collectors.maxBy(votesComparator));
+		System.out.println("Max votes: " + maxVotes.get().toString());
+		Optional<CandidateResult> minVotes = results.stream().collect(Collectors.minBy(votesComparator));
+		System.out.println("Min votes: " + minVotes.get().toString());
+
+		// Put elements in List/Set/Collection
+		List<String> lConstituencies = results.stream().map(cr -> cr.constituency()).collect(Collectors.toList());	// Allows dups
+		Set<String> setConstituencies = results.stream().map(cr -> cr.constituency()).collect(Collectors.toSet());	// No dups
+		Collection<String> collConstituencies = results.stream().map(cr -> cr.constituency()).collect(Collectors.toCollection(ArrayList::new));	// No dups
+		System.out.println();
+		System.out.println("List of " + lConstituencies.size() + " constituencies, set of " + setConstituencies.size() + " constituencies");
+		System.out.println("Collection of " + collConstituencies.size() + " constituencies");	
+		
+		// Set up a map of candidate names to constituency.
+		// Throws an exception because some surnames appear more than once
+		try {
+			Map<String, String> map1 = results.stream().collect(Collectors.toMap(CandidateResult::surname, CandidateResult::constituency));
+		} catch(Exception e) {
+			System.out.println("Exception caught running toMap: " + e);
+		}
+
+		// Use toMap with a merge function to handle this. Just concatenate consituency names
+		Map<String, String> map2 = results.stream().collect(Collectors.toMap(CandidateResult::surname, CandidateResult::constituency, (c1, c2) -> c1 + " / " + c2));
+		// Show consituencies with someone called 'MAY', 'CORBYN' and 'THATCHER'
+		System.out.println("Map of name 'MAY' = " + map2.get("MAY"));
+		System.out.println("Map of name 'CORBYN' = " + map2.get("CORBYN"));
+		System.out.println("Map of name 'THATCHER' = " + map2.get("THATCHER"));
+		
+		// Use joining collector to concatenate strings. NB Without distinct simple joining() returns an empty string ? too long presumably.
+		String joinedParties = results.stream().map(cr -> cr.partyIdentifier()).distinct().collect(Collectors.joining());
+		String joinedDelimitedParties = results.stream().map(cr -> cr.partyIdentifier()).distinct().collect(Collectors.joining(" / "));
+		String joinedPrefixedDelimitedParties = results.stream().map(cr -> cr.partyIdentifier()).distinct().collect(Collectors.joining(" / ", "<<< ", " >>>"));
+		System.out.println();
+		System.out.println("Parties: [" + joinedParties + "]");					// Empty string ????
+		System.out.println("Parties: [" + joinedDelimitedParties + "]");		// OK
+		System.out.println("Parties: [" + joinedPrefixedDelimitedParties + "]");		// OK
+		
+		// Partition the stream by a predicate, producing a Map of True/False to two lists
+		Map<Boolean,List<CandidateResult>> isLabourMap = results.stream().collect(Collectors.partitioningBy(cr -> cr.partyIdentifier().equals("Labour")));
+		System.out.println("Labour candidates: " + isLabourMap.get(Boolean.TRUE).size());
+		System.out.println("Other candidates: " + isLabourMap.get(Boolean.FALSE).size());
+				
+		Map<Boolean,IntSummaryStatistics> isLabourStatsMap = 
+				results.stream().collect(Collectors.partitioningBy(
+							cr -> cr.partyIdentifier().equals("Labour"), 
+							Collectors.summarizingInt(CandidateResult::votes)));
+		System.out.println("Labour candidates avg: " + isLabourStatsMap.get(Boolean.TRUE).getAverage() + ", max: " + isLabourStatsMap.get(Boolean.TRUE).getMax());
+		System.out.println("Other candidates avg: " + isLabourStatsMap.get(Boolean.FALSE).getAverage() + ", max: " + isLabourStatsMap.get(Boolean.FALSE).getMax());
+
+		// Group by party, list parties with 10+ candidates
+		System.out.println();
+		Map<String,List<CandidateResult>> byPartyMap = results.stream().collect(Collectors.groupingBy(cr -> cr.partyIdentifier()));
+		for(Map.Entry<String, List<CandidateResult>> entry : byPartyMap.entrySet()) {
+			if(entry.getValue().size() >= 10) {
+				System.out.println("Party: " + entry.getKey() + " - candidates: " + entry.getValue().size());
+			}
+		}
+		
+		System.out.println();
+		Map<String,IntSummaryStatistics> byPartyStatsMap = results.stream().collect(
+						Collectors.groupingBy(cr -> cr.partyIdentifier(),
+						Collectors.summarizingInt(CandidateResult::votes)));
+		for(Map.Entry<String, IntSummaryStatistics> entry : byPartyStatsMap.entrySet()) {
+			if(entry.getValue().getCount() >= 10) {
+				System.out.println("Party: " + entry.getKey() + " - candidates: " + entry.getValue().getCount() + ", votes = " + entry.getValue().getSum());
+			}
+		}
+		
+		// Reducing operation applied after groupingBy collector
+		System.out.println();
+		Map<String,Optional<CandidateResult>> byPartyHighestVote = results.stream().collect(
+						Collectors.groupingBy(cr -> cr.partyIdentifier(),
+						Collectors.reducing(BinaryOperator.maxBy(votesComparator))));
+		for(Map.Entry<String, Optional<CandidateResult>> entry : byPartyHighestVote.entrySet()) {
+			if(entry.getValue().get().votes() >= 1000) {
+				System.out.println("Party: " + entry.getKey() + " - max votes: " + entry.getValue().get().votes() + ", for " + entry.getValue().get().toString());
+			}
+		}
+		
+		// Use Collectors.mapping to allow second collector to act on something different from the main stream elements (a field of the element in this 
+		// contrived case - could be done using just a partition.
+		System.out.println();
+		Map<Boolean, List<String>> containsAMap = 
+					results.stream().collect(Collectors.mapping(cr -> cr.m_surname, 
+								 			 Collectors.partitioningBy(s -> s.indexOf("A") != -1)));
+		System.out.println("Candidates with a 'A' in the surname: " + containsAMap.get(Boolean.TRUE).size() + " : eg " + containsAMap.get(Boolean.TRUE).get(0).toString());
+		System.out.println("Other candidates: " + containsAMap.get(Boolean.FALSE).size() + " : eg " + containsAMap.get(Boolean.FALSE).get(0).toString());		
+
+		// Second example of mapping, changing focus of collecting after initial groupingBy, to produce a set listing all surnames for each party
+		System.out.println();
+		Map<String, Set<String>> byPartySurnames = results.stream().collect(
+				Collectors.groupingBy(cr -> cr.partyIdentifier(),
+				Collectors.mapping(cr -> cr.m_surname, 
+								   Collectors.toSet())));
+		for(Map.Entry<String, Set<String>> entry : byPartySurnames.entrySet()) {
+			System.out.println("Party: " + entry.getKey() + " - surnames: " + entry.getValue().size() + ", e.g. " + entry.getValue().stream().findFirst().get().toString());
+		}
+
+		// collectingAndThen to apply a final function to the collected output, e.g. just produce a sublist of 2 items
+		List<CandidateResult> lAndThen = results.stream().collect(Collectors.collectingAndThen(Collectors.toList(), l -> l.subList(2, 4)));
+		System.out.println();
+		System.out.println("List size: " + lAndThen.size());
+	}
 }
