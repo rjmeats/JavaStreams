@@ -1,15 +1,19 @@
 package streams;
 
+import java.io.BufferedWriter;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Set;
 import java.util.Map;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Comparator;
@@ -19,7 +23,9 @@ import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
+import java.util.stream.IntStream;
 import java.util.IntSummaryStatistics;
+import java.util.Formatter;
 
 public class GeneralElection {
 
@@ -32,14 +38,14 @@ public class GeneralElection {
 		
 		System.out.println("Read in " + results.size() + " candidate results");
 		
-		long constituencies = results.stream().map(CandidateResult::constituency).distinct().count();
+		long constituencyCount = results.stream().map(CandidateResult::constituency).distinct().count();
 		long parties = results.stream().map(CandidateResult::partyIdentifier).distinct().count();
 		long candidateSurnames = results.stream().map(CandidateResult::surname).distinct().count();
 		long candidateFirstNames = results.stream().map(CandidateResult::firstName).distinct().count();
 		long candidateNames = results.stream().map(cr -> cr.firstName() + " " + cr.surname()).distinct().count();
 		
 		System.out.println();
-		System.out.println("Constituencies:        " + constituencies);
+		System.out.println("Constituencies:        " + constituencyCount);
 		System.out.println("Parties:               " + parties);
 		System.out.println("Distinct surnames:     " + candidateSurnames);
 		System.out.println("Distinct first names:  " + candidateFirstNames);
@@ -61,22 +67,22 @@ public class GeneralElection {
 		}
 		
 		// Generate a set of constituencies
-		List<Constituency> lConstituencies = 
+		List<Constituency> constituencies = 
 		results.stream()
 			.collect(Collectors.groupingBy(CandidateResult::constituency))
 			.entrySet().stream()
 			.map(x -> Constituency.asConstituency(x.getKey(), x.getValue()))
 			.collect(Collectors.toList());
 
-		System.out.println("Generated " + lConstituencies.size() + " constituencies");
+		System.out.println("Generated " + constituencies.size() + " constituencies");
 		System.out.println();
-		Map<String, List<Constituency>> partyWinners = lConstituencies.stream().collect(Collectors.groupingBy(Constituency::winningParty));
+		Map<String, List<Constituency>> partyWinners = constituencies.stream().collect(Collectors.groupingBy(Constituency::winningParty));
 		for(Map.Entry<String, List<Constituency>> entry : partyWinners.entrySet()) {
 			System.out.println("  " + entry.getKey() + " : " + entry.getValue().size() + " seats");
 		}
 
 		System.out.println();
-		Map<Country, List<Constituency>> byCountry = lConstituencies.stream().collect(Collectors.groupingBy(Constituency::country));
+		Map<Country, List<Constituency>> byCountry = constituencies.stream().collect(Collectors.groupingBy(Constituency::country));
 		for(Map.Entry<Country, List<Constituency>> entry : byCountry.entrySet()) {
 			System.out.println(entry.getKey() + " : " + entry.getValue().size() + " constituencies");
 			Map<String, List<Constituency>> thisCountryWinners = entry.getValue().stream().collect(Collectors.groupingBy(Constituency::winningParty));
@@ -87,33 +93,36 @@ public class GeneralElection {
 		
 		// Constituencies with smallest number of votes for the winner
 		System.out.println();
-		lConstituencies.stream().sorted(Comparator.comparing(Constituency::winningVotes)).limit(10).forEachOrdered(System.out::println);
+		constituencies.stream().sorted(Comparator.comparing(Constituency::winningVotes)).limit(10).forEachOrdered(System.out::println);
 
 		// Constituencies with largest number of votes for the winner
 		System.out.println();
-		lConstituencies.stream().sorted(Comparator.comparing(Constituency::winningVotes).reversed()).limit(10).forEachOrdered(System.out::println);
+		constituencies.stream().sorted(Comparator.comparing(Constituency::winningVotes).reversed()).limit(10).forEachOrdered(System.out::println);
 
 		// Constituencies with the smallest majority
 		System.out.println();
-		lConstituencies.stream().sorted(Comparator.comparing(Constituency::majority)).limit(10).forEachOrdered(System.out::println);
+		constituencies.stream().sorted(Comparator.comparing(Constituency::majority)).limit(10).forEachOrdered(System.out::println);
 
 		// Constituencies where the winner has the smallest proportion of the vote
 		System.out.println();
-		lConstituencies.stream().sorted(Comparator.comparing(Constituency::winningShare)).limit(10).forEachOrdered(System.out::println);
+		constituencies.stream().sorted(Comparator.comparing(Constituency::winningShare)).limit(10).forEachOrdered(System.out::println);
 
 		// Constituencies where the last-placed candidate has the largest proportion of the vote
 		System.out.println();
-		lConstituencies.stream().sorted(Comparator.comparing(Constituency::losingShare).reversed()).limit(10)
+		constituencies.stream().sorted(Comparator.comparing(Constituency::losingShare).reversed()).limit(10)
 				.forEachOrdered(c -> System.out.println(c.toString() + " [ " + Math.round(c.losingShare()) + "% " + c.m_results.get(c.m_results.size()-1) + "]"));
 
 		// Map<String, PartyResult> mParties = lConstituencies.stream().parallel().collect(PartyResult.ResultCollector.getCollector());
-		Map<String, PartyResult> mParties = lConstituencies.stream().collect(PartyResult.ResultCollector.getCollector());
+		Map<String, PartyResult> mParties = constituencies.stream().collect(PartyResult.ResultCollector.getCollector());
 		System.out.println();
 		List<PartyResult> lParties = mParties.values().stream().sorted((x,y) -> y.m_wins - x.m_wins).collect(Collectors.toList());
 		System.out.println("Produced party result for " + mParties.size() + " parties");
 		System.out.println();
 		System.out.println("Parties with a win or 100000 votes:");
 		lParties.stream().filter(p -> p.m_wins > 0 || p.m_votes >= 100000).forEachOrdered(System.out::println);
+		
+		// Use elsewhere via CSV dump
+		dumpOutputFile(results, constituencies);
 	}
 
 	static List<CandidateResult> readResultsFile(String path) {
@@ -136,6 +145,46 @@ public class GeneralElection {
 		}
 		
 		return l;
+	}
+	
+	static void dumpOutputFile(List<CandidateResult> results, List<Constituency> constituencies) {
+		
+		// Augment each candidate-result record with some derived info, and then output a CSV file with this extended information.
+		// - did the candidate win or lose, and what was the position number, how many candidates were there ? 
+		// - which was the winning party ?
+		// - which country is the constituency in
+		// - a simplified party identifier, covering lots of smaller parties with 'Other'
+		
+		List<AugmentedCandidateResult> l = constituencies.stream().flatMap(c-> AugmentedCandidateResult.augmentResultsForConstituency(c).stream()).collect(Collectors.toList());
+		System.out.println();
+		System.out.println("Produced " + l.size() + " augmented results");
+		System.out.println();
+		
+		String nl = System.lineSeparator();
+		StringBuilder sb = new StringBuilder();
+		sb.append(AugmentedCandidateResult.toCSVHeader()).append(nl);
+		l.stream().limit(10000).forEachOrdered(a -> sb.append(a.toCSV()).append(nl));
+		
+		String outputFolderName = "output";
+		String outputFileName = outputFolderName + "/" + "ExtendedUKGeneralElection2017.csv";
+		File logsFolder = new File(outputFolderName);
+		if(logsFolder.exists() && logsFolder.isDirectory() && logsFolder.canWrite()) {
+			System.out.println("Augmented CSV file produced in file: " + outputFileName);
+			writeFile(outputFileName, sb.toString());
+		}
+		else {
+			System.out.println("No augmented CSV file produced - no " + outputFolderName + " folder present");
+		}
+	}
+
+	private static void writeFile(String filename, String s) {
+	    try (BufferedWriter bw = Files.newBufferedWriter(new File(filename).toPath(), StandardCharsets.ISO_8859_1)) {
+			bw.write(s, 0, s.length());
+			bw.newLine();
+	    }
+	    catch(Exception e) {
+	        System.err.println("Failed to write to: " + filename + " " + e.getMessage());
+	    }
 	}
 }
 
@@ -183,6 +232,8 @@ class CandidateResult {
 		
 		CandidateResult cr = new CandidateResult();
 		
+		cr.m_ONSCode = fields[0].trim();
+		cr.m_PANO = fields[1].trim();
 		cr.m_constituency = fields[2].trim();
 		cr.m_surname = fields[3].trim();
 		cr.m_firstname = fields[4].trim();
@@ -198,6 +249,8 @@ class CandidateResult {
 		return cr;
 	}
 	
+	String m_ONSCode;
+	String m_PANO;
 	String m_constituency;
 	String m_surname;
 	String m_firstname;
@@ -217,8 +270,144 @@ class CandidateResult {
 	}
 }
 
+// Class for outputting CSV version of candidate data with some extra fields added compared to the input file fields
+class AugmentedCandidateResult {
+	CandidateResult m_basicResult;
+	int m_position;
+	String m_outcome;	// Win or Loss
+	double m_voteShare;
+	int m_majority;
+	String m_simplifiedParty;
+	int m_numCandidates;
+	String m_country;
+	
+	// Produce a list of augmented results for a constituency
+	static List<AugmentedCandidateResult> augmentResultsForConstituency(Constituency constituency) {		
+		List<AugmentedCandidateResult> l = 
+				IntStream.rangeClosed(1, constituency.m_results.size())
+				.mapToObj(pos -> new AugmentedCandidateResult(constituency, pos, constituency.m_results.get(pos-1)))
+				.collect(Collectors.toList());
+		return l;
+	}
+	
+	AugmentedCandidateResult(Constituency constituency, int position, CandidateResult result) {
+		m_basicResult = result;
+		m_position = position;
+		m_outcome = (position == 1) ? "Winner" : "Loser";
+		m_voteShare = result.m_votes * 1.0 / constituency.m_totalVotes; 
+		m_majority = (position == 1) ? constituency.m_majority : 0;
+		m_simplifiedParty = simplifyParty();
+		m_numCandidates = constituency.m_results.size();
+		m_country = constituency.country().toString();
+	}
+
+	// List of main parties, allowing an 'Other' category to be used to cover everyone else
+	static List<String> s_keepParties = Arrays.asList("Conservative", "Labour", "Liberal Democrats", "SNP", "UKIP", "Green Party", 
+													  "DUP", "Sinn Féin", "Plaid Cymru", "SDLP", "UUP", "Alliance");
+	String simplifyParty() {
+		String sp = "";
+		if(m_position == 1) {
+			// Keep the party name for winners
+			sp = m_basicResult.m_partyIdentifier;
+		} else {
+			// Convert non-mainstream party names to 'Other'
+			long matches = s_keepParties.stream().filter(s -> s.equalsIgnoreCase(m_basicResult.m_partyIdentifier)).count();
+			if(matches == 1) {
+				sp = m_basicResult.m_partyIdentifier;
+			}
+			else {
+				sp = "Other";
+			}
+		}
+
+		// Remove trailing word 'Party' if present
+		sp = sp.trim();
+		if(sp.endsWith("Party")) {
+			sp = sp.replaceAll("Party", "").trim();
+		}
+		return sp;
+	}
+	
+	// Generate CSV output for the augmented result records
+	static String toCSVHeader() {
+		StringBuilder sb = new StringBuilder();
+		// Output same heaer fields as in the original file, separated by commas
+		sb.append("ONS Code").append(",");
+		sb.append("PANO").append(",");
+		sb.append("Constituency").append(",");
+		sb.append("Surname").append(",");
+		sb.append("First name").append(",");
+		sb.append("Full Party").append(",");
+		sb.append("Valid votes").append(",");
+				
+		// Append augmented fields
+		sb.append("Position").append(",");
+		sb.append("Outcome").append(",");
+		sb.append("Share").append(",");
+		sb.append("Majority").append(",");
+		sb.append("Candidate count").append(",");
+		sb.append("Party").append(",");
+		sb.append("Country");
+
+		return sb.toString();
+	}
+	
+	String toCSV() {
+		StringBuilder sb = new StringBuilder();
+		CandidateResult r = m_basicResult;
+		// Output same fields as in the original file, separated by commas, protected by doublequotes if the item contains a comma
+		sb.append(protect(r.m_ONSCode)).append(",");
+		sb.append(protect(r.m_PANO)).append(",");
+		sb.append(protect(r.m_constituency)).append(",");
+		sb.append(protect(r.m_surname)).append(",");
+		sb.append(protect(r.m_firstname)).append(",");
+		sb.append(protect(r.m_partyIdentifier)).append(",");
+		sb.append(r.m_votes).append(",");
+				
+		// Append augmented fields
+		sb.append(m_position).append(",");
+		sb.append(m_outcome).append(",");
+		Formatter fmt = new Formatter(); sb.append(fmt.format("%.3f",  m_voteShare).toString()).append(","); fmt.close();
+		sb.append(m_majority).append(",");
+		sb.append(m_numCandidates).append(",");
+		sb.append(m_simplifiedParty).append(",");
+		sb.append(m_country);
+
+		return sb.toString();
+	}
+	
+	static char dq = '\"';
+	static String protect(String in) {
+		String out = in.trim();
+		if(out.indexOf(dq) != -1) {
+			// OK if just at start and end, otherwise trouble
+			if(out.charAt(0) == dq && out.charAt(out.length()-1) == dq && out.replaceAll(dq+"", "").length() == out.length()-2) {
+				// Retain double quotes
+			}
+			else {
+				System.err.println("Internal double quote in field: " + in);
+			}				
+		}
+		else if(in.indexOf(",") != -1) {
+			out = dq + in + dq;
+		}
+		return out;
+	}
+	
+}
+
 enum Country {
-	ENGLAND, SCOTLAND, WALES, NORTHERN_IRELAND;
+	
+	ENGLAND("England"), SCOTLAND("Scotland"), WALES("Wales"), NORTHERN_IRELAND("Northern Ireland");
+	
+	String m_label; 
+	Country(String label) {
+		m_label = label;
+	}
+	
+	public String toString() {
+		return m_label;
+	}
 }
 
 class Constituency {

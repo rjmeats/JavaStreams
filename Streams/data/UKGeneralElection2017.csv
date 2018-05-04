@@ -39,12 +39,12 @@ E14000537,21,Ashton-under-Lyne,HICKS,Carly May,Liberal Democrats,Liberal Democra
 E14000537,21,Ashton-under-Lyne,JACKSON,Maurice,UK Independence Party (UKIP),UKIP,1878
 E14000537,21,Ashton-under-Lyne,RANKIN,Jack Michael,The Conservative Party Candidate,Conservative,12710
 E14000537,21,Ashton-under-Lyne,RAYNER,Angela,Labour Party,Labour,24005
-E14000538,22,Aylesbury,MICHAEL,"	Kyle Arron Paul",Independent,Independent,620
-E14000538,22,Aylesbury,SIMPSON ,"	Coral Rose Kathleen",Green Party,Green Party,1237
-E14000538,22,Aylesbury,SRAO ,"	Vijay Singh",UK Independence Party (UKIP),UKIP,1296
-E14000538,22,Aylesbury,LAMBERT,"	Steven Michael",Liberal Democrats,Liberal Democrats,5660
-E14000538,22,Aylesbury,BATEMAN,"	Mark Trevor",Labour Party,Labour,17657
-E14000538,22,Aylesbury,LIDINGTON,"	Dav Roy",The Conservative Party Candidate,Conservative,32313
+E14000538,22,Aylesbury,MICHAEL,"Kyle Arron Paul",Independent,Independent,620
+E14000538,22,Aylesbury,SIMPSON ,"Coral Rose Kathleen",Green Party,Green Party,1237
+E14000538,22,Aylesbury,SRAO ,"Vijay Singh",UK Independence Party (UKIP),UKIP,1296
+E14000538,22,Aylesbury,LAMBERT,"Steven Michael",Liberal Democrats,Liberal Democrats,5660
+E14000538,22,Aylesbury,BATEMAN,"Mark Trevor",Labour Party,Labour,17657
+E14000538,22,Aylesbury,LIDINGTON,"Dav Roy",The Conservative Party Candidate,Conservative,32313
 E14000539,26,Banbury,EDWARDS,Roseanne,Independent,Independent,927
 E14000539,26,Banbury,MIDDLETON,Ian Michael,Green Party,Green Party,1225
 E14000539,26,Banbury,BIRD,Dickie,UK Independence Party (UKIP),UKIP,1581
@@ -154,11 +154,11 @@ E14000559,56,Birkenhead,CLOUGH,Jayne Louise Stephanie,Green Party,Green Party,94
 E14000559,56,Birkenhead,BRAME,Allan John,Liberal Democrats,Liberal Democrats,1118
 E14000559,56,Birkenhead,GARDINER,Stewart Anthony,The Conservative Party Candidate,Conservative,8044
 E14000559,56,Birkenhead,FIELD,Frank,Labour Party,Labour,33558
-E14000560,57,"Birmingham, EdGBaston",RODGERS,Dick,Europe Needs Us,ENU,155
-E14000560,57,"Birmingham, EdGBaston",KIFF,Alice,Green Party,Green Party,562
-E14000560,57,"Birmingham, EdGBaston",GREEN,Colin Francis,Liberal Democrats,Liberal Democrats,1564
-E14000560,57,"Birmingham, EdGBaston",SQUIRE,Caroline,The Conservative Party Candidate,Conservative,17207
-E14000560,57,"Birmingham, EdGBaston",GILL,Preet,Labour And Co-Operative Party,Labour,24124
+E14000560,57,"Birmingham, Edgbaston",RODGERS,Dick,Europe Needs Us,ENU,155
+E14000560,57,"Birmingham, Edgbaston",KIFF,Alice,Green Party,Green Party,562
+E14000560,57,"Birmingham, Edgbaston",GREEN,Colin Francis,Liberal Democrats,Liberal Democrats,1564
+E14000560,57,"Birmingham, Edgbaston",SQUIRE,Caroline,The Conservative Party Candidate,Conservative,17207
+E14000560,57,"Birmingham, Edgbaston",GILL,Preet,Labour And Co-Operative Party,Labour,24124
 E14000561,58,"Birmingham, Erdington",LOVATT,James,Green Party,Green Party,610
 E14000561,58,"Birmingham, Erdington",HOLTOM,Ann,Liberal Democrats,Liberal Democrats,750
 E14000561,58,"Birmingham, Erdington",ALDEN,Robert James Cambray,The Conservative Party Candidate,Conservative,14286
@@ -393,10 +393,10 @@ E14000607,107,Broxtowe,LOI,Claude-Francois,UK Independence Party (UKIP),UKIP,147
 E14000607,107,Broxtowe,HALLAM,Timothy Robert,Liberal Democrats,Liberal Democrats,2247
 E14000607,107,Broxtowe,MARSHALL,Gregory,Labour Party,Labour,25120
 E14000607,107,Broxtowe,SOUBRY,Anna Mary,The Conservative Party Candidate,Conservative,25983
-E14000608,108,Buckingham,MAPLETOFT ,"	Brian James",UK Independence Party (UKIP),UKIP,4168
-E14000608,108,Buckingham,RAVEN ,"	Scott Darren",Independent,Independent,5638
-E14000608,108,Buckingham,SHEPPARD ,"	Michael John",Green Party,Green Party,8574
-E14000608,108,Buckingham,BERCOW ,"	John Simon",The Speaker Seeking Re-Election,Speaker,34299
+E14000608,108,Buckingham,MAPLETOFT ,"Brian James",UK Independence Party (UKIP),UKIP,4168
+E14000608,108,Buckingham,RAVEN ,"Scott Darren",Independent,Independent,5638
+E14000608,108,Buckingham,SHEPPARD ,"Michael John",Green Party,Green Party,8574
+E14000608,108,Buckingham,BERCOW ,"John Simon",The Speaker Seeking Re-Election,Speaker,34299
 E14000609,109,Burnley,FISK,Laura,Green Party,Green Party,461
 E14000609,109,Burnley,COMMIS,Tom,UK Independence Party (UKIP),UKIP,2472
 E14000609,109,Burnley,BIRTWISTLE,Gordon,Liberal Democrats,Liberal Democrats,6046
@@ -1172,11 +1172,11 @@ E14000756,322,Huddersfield,ALI,Zulfiqar,Liberal Democrats,Liberal Democrats,1155
 E14000756,322,Huddersfield,COOPER,Andrew Varah,Green Party,Green Party,1395
 E14000756,322,Huddersfield,BENTON,Scott Lloyd,The Conservative Party Candidate,Conservative,14465
 E14000756,322,Huddersfield,SHEERMAN,Barry John,Labour And Co-Operative Party,Labour,26470
-E14000757,326,Huntingdon,MACLENNAN,"	Thomas",Green Party,Green Party,1095
-E14000757,326,Huntingdon,BULLEN,"	Paul",UK Independence Party (UKIP),UKIP,2180
-E14000757,326,Huntingdon,CANTRILL,"	Roderick Giles",Liberal Democrats,Liberal Democrats,5090
-E14000757,326,Huntingdon,JOHNSON,"	Nicholas Grant",Labour Party,Labour,18440
-E14000757,326,Huntingdon,DJANOGLY,"	Jonathan Simon",The Conservative Party Candidate,Conservative,32915
+E14000757,326,Huntingdon,MACLENNAN,"Thomas",Green Party,Green Party,1095
+E14000757,326,Huntingdon,BULLEN,"Paul",UK Independence Party (UKIP),UKIP,2180
+E14000757,326,Huntingdon,CANTRILL,"Roderick Giles",Liberal Democrats,Liberal Democrats,5090
+E14000757,326,Huntingdon,JOHNSON,"Nicholas Grant",Labour Party,Labour,18440
+E14000757,326,Huntingdon,DJANOGLY,"Jonathan Simon",The Conservative Party Candidate,Conservative,32915
 E14000758,327,Hyndburn,JONES,Leslie,Liberal Democrats,Liberal Democrats,824
 E14000758,327,Hyndburn,BROWN,Janet,UK Independence Party (UKIP),UKIP,1953
 E14000758,327,Hyndburn,HORKIN,Kevin Thomas,The Conservative Party Candidate,Conservative,18305
@@ -1241,10 +1241,10 @@ E14000768,340,Kensington,NADEL,Jennifer Dunham,Green Party,Green Party,767
 E14000768,340,Kensington,MULLIN,Annabel Jean Charlotte,Liberal Democrats,Liberal Democrats,4724
 E14000768,340,Kensington,BORWICK,Victoria Lorne Peta,The Conservative Party Candidate,Conservative,16313
 E14000768,340,Kensington,DENT COAD,Emma,Labour Party,Labour,16333
-E14000769,341,Kettering,REEVES,"	Robert James",Green Party,Green Party,1116
-E14000769,341,Kettering,AUSTIN,"	Suzanna Marie",Liberal Democrats,Liberal Democrats,1618
-E14000769,341,Kettering,SCRIMSHAW,"	Michael",Labour Party,Labour,18054
-E14000769,341,Kettering,HOLLOBONE,"	Philip Thomas",The Conservative Party Candidate,Conservative,28616
+E14000769,341,Kettering,REEVES,"Robert James",Green Party,Green Party,1116
+E14000769,341,Kettering,AUSTIN,"Suzanna Marie",Liberal Democrats,Liberal Democrats,1618
+E14000769,341,Kettering,SCRIMSHAW,"Michael",Labour Party,Labour,18054
+E14000769,341,Kettering,HOLLOBONE,"Philip Thomas",The Conservative Party Candidate,Conservative,28616
 E14000770,343,Kingston and Surbiton,BASMAN,Michael John,Independent,Independent,100
 E14000770,343,Kingston and Surbiton,CHINNERY,Jason,The Official Monster Raving Loony Party,Monster Raving Loony Party,168
 E14000770,343,Kingston and Surbiton,WALKER,Christopher John,Green Party,Green Party,536
@@ -2286,11 +2286,11 @@ E14000974,539,Stoke-on-Trent South,ZABLOCKI,Jan,Green Party,Green Party,643
 E14000974,539,Stoke-on-Trent South,WILKES,Ian Frank,Liberal Democrats,Liberal Democrats,808
 E14000974,539,Stoke-on-Trent South,FLELLO,Robert Charles Douglas,Labour Party,Labour,19788
 E14000974,539,Stoke-on-Trent South,BRERETON,Jack Edgar,The Conservative Party Candidate,Conservative,20451
-E14000975,540,Stone,PANCHERI   ,Samantha Jay,Green Party,Green Party,707
-E14000975,540,Stone,WHITFIELD   ,Edward Henry,UK Independence Party (UKIP),UKIP,1370
-E14000975,540,Stone,LEWIS   ,Martin Wyn,Liberal Democrats,Liberal Democrats,2222
-E14000975,540,Stone,HALE   ,Sam,Labour And Co-Operative Party,Labour,14119
-E14000975,540,Stone,CASH   ,Bill,The Conservative Party Candidate,Conservative,31614
+E14000975,540,Stone,PANCHERI,Samantha Jay,Green Party,Green Party,707
+E14000975,540,Stone,WHITFIELD,Edward Henry,UK Independence Party (UKIP),UKIP,1370
+E14000975,540,Stone,LEWIS,Martin Wyn,Liberal Democrats,Liberal Democrats,2222
+E14000975,540,Stone,HALE,Sam,Labour And Co-Operative Party,Labour,14119
+E14000975,540,Stone,CASH,Bill,The Conservative Party Candidate,Conservative,31614
 E14000976,541,Stourbridge,MOHR,Andrew Paul,Green Party,Green Party,493
 E14000976,541,Stourbridge,BRAMALL,Christopher Ashley,Liberal Democrats,Liberal Democrats,1083
 E14000976,541,Stourbridge,WILSON,Glen Patrick,UK Independence Party (UKIP),UKIP,1801
@@ -3294,7 +3294,7 @@ W07000078,589,Vale of Glamorgan,GERONI,Jennifer Nia,Welsh Liberal Democrats / De
 W07000078,589,Vale of Glamorgan,JOHNSON,Ian James,Plaid Cymru - The Party Of Wales,Plaid Cymru,2295
 W07000078,589,Vale of Glamorgan,BEAVAN,Camilla,Welsh Labour / Llafur Cymru,Labour,23311
 W07000078,589,Vale of Glamorgan,CAIRNS,Alun,Welsh Conservative Party Candidate / Ymgeisydd Plaid Geidwadol Cymru,Conservative,25501
-W07000044,641,Wrexham,O'TOOLE  ,CAROLE GEORGINA TETLEY,Welsh Liberal Democrats / Democratiaid Rhyddfrydol Cymru,Liberal Democrats,865
+W07000044,641,Wrexham,O'TOOLE,CAROLE GEORGINA TETLEY,Welsh Liberal Democrats / Democratiaid Rhyddfrydol Cymru,Liberal Democrats,865
 W07000044,641,Wrexham,HARPER,Carrie,Plaid Cymru - The Party Of Wales,Plaid Cymru,1753
 W07000044,641,Wrexham,ATKINSON,Andrew Mark,Welsh Conservative Party Candidate / Ymgeisydd Plaid Geidwadol Cymru,Conservative,15321
 W07000044,641,Wrexham,LUCAS,Ian Colin,Welsh Labour / Llafur Cymru,Labour,17153
