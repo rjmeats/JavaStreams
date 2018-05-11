@@ -13,7 +13,6 @@ import java.util.HashMap;
 import java.util.Set;
 import java.util.Map;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Comparator;
@@ -180,7 +179,7 @@ public class GeneralElection {
 	private static void writeFile(String filename, String s) {
 	    try (BufferedWriter bw = Files.newBufferedWriter(new File(filename).toPath(), StandardCharsets.ISO_8859_1)) {
 			bw.write(s, 0, s.length());
-			bw.newLine();
+//			bw.newLine();
 	    }
 	    catch(Exception e) {
 	        System.err.println("Failed to write to: " + filename + " " + e.getMessage());
@@ -303,7 +302,7 @@ class AugmentedCandidateResult {
 
 	// List of main parties, allowing an 'Other' category to be used to cover everyone else
 	static List<String> s_keepParties = Arrays.asList("Conservative", "Labour", "Liberal Democrats", "SNP", "UKIP", "Green Party", 
-													  "DUP", "Sinn Féin", "Plaid Cymru", "SDLP", "UUP", "Alliance");
+													  "DUP", "Sinn Féin", "Plaid Cymru", "SDLP", "UUP", "Alliance", "Independent");
 	String simplifyParty() {
 		String sp = "";
 		if(m_position == 1) {
@@ -551,10 +550,12 @@ class PartyResult {
 		ResultCollector() {
 		}
 		
+		// Supplier interface
 		public Map<String, PartyResult> get() {
 			return new HashMap<String, PartyResult>();
 		}
 		
+		// BiConsumer interface
 		public void accept(Map<String, PartyResult> m, Constituency c) {
 			int position = 0;
 			for(CandidateResult cr : c.m_results) {
@@ -567,7 +568,8 @@ class PartyResult {
 				p.addConstituency(c, cr, position);
 			}
 		}
-		
+
+		// BinaryOperator interface
 		public Map<String, PartyResult> apply(Map<String, PartyResult> m1, Map<String, PartyResult> m2) {
 			// Invoked when doing collect on a parallel stream.
 			// Combine results from the two maps into a single map (can be a new map or one of the passed-in ones)
