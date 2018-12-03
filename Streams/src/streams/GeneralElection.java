@@ -77,7 +77,7 @@ public class GeneralElection {
 		System.out.println();
 		Map<String, List<Constituency>> partyWinners = constituencies.stream().collect(Collectors.groupingBy(Constituency::winningParty));
 		for(Map.Entry<String, List<Constituency>> entry : partyWinners.entrySet()) {
-			System.out.println("  " + entry.getKey() + " : " + entry.getValue().size() + " seats");
+			System.out.println("  " + entry.getKey() + " : " + entry.getValue().size() + " seat" + (entry.getValue().size() == 1 ? "" : "s"));
 		}
 
 		System.out.println();
@@ -86,7 +86,7 @@ public class GeneralElection {
 			System.out.println(entry.getKey() + " : " + entry.getValue().size() + " constituencies");
 			Map<String, List<Constituency>> thisCountryWinners = entry.getValue().stream().collect(Collectors.groupingBy(Constituency::winningParty));
 			for(Map.Entry<String, List<Constituency>> entry2 : thisCountryWinners.entrySet()) {
-				System.out.println("  " + entry2.getKey() + " : " + entry2.getValue().size() + " seats");
+				System.out.println("  " + entry2.getKey() + " : " + entry2.getValue().size() + " seat" + (entry2.getValue().size() == 1 ? "" : "s"));
 			}
 		}
 		
